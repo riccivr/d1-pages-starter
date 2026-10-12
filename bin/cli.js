@@ -9,6 +9,7 @@ import {
   copyDir,
   generateSchema,
   generateWorkerCode,
+  generateRustCargoToml,
   generateTailoredReadme,
 } from "./scaffold.js";
 
@@ -72,7 +73,30 @@ async function main() {
     defaultIndex: 0,
   });
 
-  // 3. Frontend Selection
+  // 3. Backend Language Selection
+  const backendChoice = await promptSelect({
+    message: "Select your edge backend language:",
+    choices: [
+      {
+        title: "TypeScript (Recommended)",
+        value: "typescript",
+        hint: "V8 native, fastest development, zero extra toolchains needed",
+      },
+      {
+        title: "Rust (WebAssembly / worker-rs)",
+        value: "rust",
+        hint: "Compiled Wasm, ultra-low memory, type safety, native D1",
+      },
+      {
+        title: "Python (Native Worker)",
+        value: "python",
+        hint: "Pyodide Wasm runtime, native D1 support",
+      },
+    ],
+    defaultIndex: 0,
+  });
+
+  // 4. Frontend Selection
   const frontendChoice = await promptSelect({
     message: "Select your frontend framework:",
     choices: [
@@ -100,7 +124,7 @@ async function main() {
     defaultIndex: 0,
   });
 
-  // 4. Use Case / Schema Preset
+  // 5. Use Case / Schema Preset
   const presetChoice = await promptSelect({
     message: "Select an application preset:",
     choices: [
@@ -123,7 +147,7 @@ async function main() {
     defaultIndex: 0,
   });
 
-  // 5. GitHub Actions CI/CD
+  // 6. GitHub Actions CI/CD
   const includeCI = await promptConfirm({
     message: "Include automated GitHub Actions CI/CD workflows for GitHub Pages & Workers?",
     defaultValue: true,
@@ -147,41 +171,67 @@ async function main() {
   const schemaContent = generateSchema(presetChoice);
   fs.writeFileSync(path.join(workerDestDir, "schema.sql"), schemaContent, "utf-8");
 
-  // Generate worker src/index.ts
-  const workerSrc = generateWorkerCode({ db: dbChoice, preset: presetChoice });
-  fs.writeFileSync(path.join(workerDestDir, "src", "index.ts"), workerSrc, "utf-8");
+  // Worker Code Generation by Language
+  if (backendChoice === "rust") {
+    // Rust Cargo.toml
+    const cargoToml = generateRustCargoToml(projectName);
+    fs.writeFileSync(path.join(workerDestDir, "Cargo.toml"), cargoToml, "utf-8");
 
-  // Generate worker tsconfig.json
-  const tsconfigWorker = {
-    compilerOptions: {
-      target: "ESNext",
-      module: "ESNext",
-      moduleResolution: "Bundler",
-      lib: ["ESNext"],
-      types: ["@cloudflare/workers-types"],
-      strict: true,
-      skipLibCheck: true,
-      noEmit: true,
-    },
-    include: ["src/**/*"],
-  };
-  fs.writeFileSync(
-    path.join(workerDestDir, "tsconfig.json"),
-    JSON.stringify(tsconfigWorker, null, 2),
-    "utf-8"
-  );
+    // Rust src/lib.rs
+    const rustCode = generateWorkerCode({ db: dbChoice, preset: presetChoice, lang: "rust" });
+    fs.writeFileSync(path.join(workerDestDir, "src", "lib.rs"), rustCode, "utf-8");
+  } else if (backendChoice === "python") {
+    // Python entry.py
+    const pyCode = generateWorkerCode({ db: dbChoice, preset: presetChoice, lang: "python" });
+    fs.writeFileSync(path.join(workerDestDir, "src", "entry.py"), pyCode, "utf-8");
+  } else {
+    // TypeScript index.ts
+    const tsCode = generateWorkerCode({ db: dbChoice, preset: presetChoice, lang: "typescript" });
+    fs.writeFileSync(path.join(workerDestDir, "src", "index.ts"), tsCode, "utf-8");
+
+    // TypeScript tsconfig.json
+    const tsconfigWorker = {
+      compilerOptions: {
+        target: "ESNext",
+        module: "ESNext",
+        moduleResolution: "Bundler",
+        lib: ["ESNext"],
+        types: ["@cloudflare/workers-types"],
+        strict: true,
+        skipLibCheck: true,
+        noEmit: true,
+      },
+      include: ["src/**/*"],
+    };
+    fs.writeFileSync(
+      path.join(workerDestDir, "tsconfig.json"),
+      JSON.stringify(tsconfigWorker, null, 2),
+      "utf-8"
+    );
+  }
 
   // Generate worker wrangler.jsonc
   const wranglerConfig = {
     $schema: "node_modules/wrangler/config-schema.json",
     name: `${projectName}-api`,
-    main: "src/index.ts",
     compatibility_date: "2025-02-01",
-    compatibility_flags: ["nodejs_compat"],
     vars: {
       ALLOWED_ORIGIN: "*",
     },
   };
+
+  if (backendChoice === "rust") {
+    wranglerConfig.main = "build/index.js";
+    wranglerConfig.build = {
+      command: "cargo install -q worker-build && worker-build --release",
+    };
+  } else if (backendChoice === "python") {
+    wranglerConfig.main = "src/entry.py";
+    wranglerConfig.compatibility_flags = ["python_workers"];
+  } else {
+    wranglerConfig.main = "src/index.ts";
+    wranglerConfig.compatibility_flags = ["nodejs_compat"];
+  }
 
   if (dbChoice === "d1") {
     wranglerConfig.d1_databases = [
@@ -218,7 +268,7 @@ async function main() {
   if (dbChoice === "d1") {
     workerPkg.scripts["db:init:local"] = `wrangler d1 execute ${projectName}-db --local --file=./schema.sql`;
     workerPkg.scripts["db:init:remote"] = `wrangler d1 execute ${projectName}-db --remote --file=./schema.sql`;
-  } else {
+  } else if (backendChoice === "typescript") {
     workerPkg.dependencies = {
       "@libsql/client": "^0.14.0",
     };
@@ -233,6 +283,7 @@ async function main() {
   // Generate .gitignore
   const gitignoreContent = `node_modules/
 dist/
+target/
 .output/
 .astro/
 .wrangler/
@@ -266,6 +317,7 @@ Thumbs.db
     projectName,
     db: dbChoice,
     frontend: frontendChoice,
+    backendLang: backendChoice,
     preset: presetChoice,
     ci: includeCI,
   });
@@ -342,6 +394,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      ${
+        backendChoice === "rust"
+          ? `- uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - run: cargo install -q worker-build`
+          : ""
+      }
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -358,6 +418,12 @@ jobs:
   // Done!
   console.log(`
 ${c.green(symbols.check)} ${c.bold("Success! Generated project in:")} ${c.brightCyan(targetDir)}
+
+${c.bold("Chosen Configuration:")}
+  ${c.dim("•")} Database: ${c.orange(dbChoice === "d1" ? "Cloudflare D1" : "Turso")}
+  ${c.dim("•")} Backend:  ${c.brightCyan(backendChoice.toUpperCase())}
+  ${c.dim("•")} Frontend: ${c.orange(frontendChoice.toUpperCase())}
+  ${c.dim("•")} Preset:   ${c.brightCyan(presetChoice)}
 
 ${c.bold("Next Steps:")}
   ${c.dim("1.")} ${c.orange(`cd ${projectName}`)}

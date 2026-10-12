@@ -24,6 +24,7 @@ node bin/cli.js
 ### Interactive Prompts:
 * 📁 **Project Name**: Choose target directory name
 * 🗄️ **Database Engine**: Cloudflare D1 (Native SQLite) or Turso (libSQL)
+* 🦀 **Backend Language**: TypeScript, Rust (WebAssembly / `worker-rs`), or Python
 * 🎨 **Frontend**: Vanilla JS (Zero-build), React + Vite, Astro, or Svelte 5
 * 🧩 **App Preset**: Guestbook / Feed, Waitlist / Newsletter, or Upvote / Reaction Counters
 * 🤖 **CI/CD**: Auto-configure GitHub Actions for GitHub Pages and Cloudflare Workers

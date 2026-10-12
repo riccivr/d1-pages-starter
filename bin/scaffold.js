@@ -69,12 +69,14 @@ VALUES ('Welcome Bot', 'Hello world from your new serverless edge stack!');
 `;
 }
 
-export function generateWorkerCode({ db, preset }) {
-  if (db === "d1") {
-    return generateD1WorkerCode(preset);
-  } else {
-    return generateTursoWorkerCode(preset);
+export function generateWorkerCode({ db, preset, lang = "typescript" }) {
+  if (lang === "rust") {
+    return generateRustWorkerCode(preset);
   }
+  if (lang === "python") {
+    return generatePythonWorkerCode(preset);
+  }
+  return db === "d1" ? generateD1WorkerCode(preset) : generateTursoWorkerCode(preset);
 }
 
 function generateD1WorkerCode(preset) {
@@ -123,6 +125,7 @@ export default {
         return jsonResponse({
           status: "online",
           database: "Cloudflare D1",
+          runtime: "TypeScript",
           timestamp: new Date().toISOString(),
         }, 200, env, request);
       }
@@ -218,6 +221,7 @@ export default {
         return jsonResponse({
           status: "online",
           database: "Turso (libSQL)",
+          runtime: "TypeScript",
           timestamp: new Date().toISOString(),
         }, 200, env, request);
       }
@@ -257,7 +261,195 @@ export default {
 `;
 }
 
-export function generateTailoredReadme({ projectName, db, frontend, preset, ci }) {
+export function generateRustCargoToml(projectName) {
+  return `[package]
+name = "${projectName}-worker"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+worker = { version = "0.4.2", features = ["d1"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+`;
+}
+
+export function generateRustWorkerCode(preset) {
+  return `use worker::*;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct Post {
+    id: Option<i64>,
+    name: String,
+    message: String,
+    created_at: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct PostInput {
+    name: String,
+    message: String,
+}
+
+fn cors_response(res: Response, allowed: &str) -> Result<Response> {
+    let mut headers = res.headers().clone();
+    headers.set("Access-Control-Allow-Origin", allowed)?;
+    headers.set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")?;
+    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")?;
+    Ok(res.with_headers(headers))
+}
+
+#[event(fetch)]
+async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
+    let method = req.method();
+    let allowed_origin = env
+        .var("ALLOWED_ORIGIN")
+        .map(|v| v.to_string())
+        .unwrap_or_else(|_| "*".to_string());
+
+    if method == Method::Options {
+        let res = Response::empty()?.with_status(204);
+        return cors_response(res, &allowed_origin);
+    }
+
+    let path = req.path();
+    let response = match (method, path.as_str()) {
+        (Method::Get, "" | "/api" | "/api/health") => {
+            let d1 = env.d1("DB")?;
+            d1.prepare("SELECT 1;").first::<serde_json::Value>(None).await?;
+            Response::from_json(&serde_json::json!({
+                "status": "online",
+                "database": "Cloudflare D1 (connected)",
+                "runtime": "Rust (WebAssembly / worker-rs)"
+            }))
+        }
+        (Method::Get, "/api/posts") => {
+            let d1 = env.d1("DB")?;
+            let stmt = d1.prepare("SELECT id, name, message, created_at FROM posts ORDER BY created_at DESC LIMIT 50");
+            let results = stmt.all().await?.results::<serde_json::Value>()?;
+            Response::from_json(&serde_json::json!({
+                "success": true,
+                "count": results.len(),
+                "data": results
+            }))
+        }
+        (Method::Post, "/api/posts") => {
+            let mut req = req;
+            let body: PostInput = req.json().await?;
+            let name = body.name.trim();
+            let message = body.message.trim();
+
+            if name.is_empty() || message.is_empty() {
+                return cors_response(
+                    Response::from_json(&serde_json::json!({
+                        "success": false,
+                        "error": "Name and message required"
+                    }))?
+                    .with_status(400),
+                    &allowed_origin,
+                );
+            }
+
+            let d1 = env.d1("DB")?;
+            let stmt = d1
+                .prepare("INSERT INTO posts (name, message) VALUES (?, ?) RETURNING id, name, message, created_at")
+                .bind(&[name.into(), message.into()])?;
+            let post: serde_json::Value = stmt.first(None).await?.unwrap_or_default();
+            Response::from_json(&serde_json::json!({
+                "success": true,
+                "data": post
+            }))
+        }
+        _ => Response::from_json(&serde_json::json!({
+            "success": false,
+            "error": format!("Route not found: {}", path)
+        }))?
+        .with_status(404),
+    };
+
+    match response {
+        Ok(res) => cors_response(res, &allowed_origin),
+        Err(e) => cors_response(
+            Response::from_json(&serde_json::json!({
+                "success": false,
+                "error": e.to_string()
+            }))?
+            .with_status(500),
+            &allowed_origin,
+        ),
+    }
+}
+`;
+}
+
+export function generatePythonWorkerCode(preset) {
+  return `from js import Response, Headers, JSON
+import json
+
+def get_cors_headers(env):
+    try:
+        allowed = env.ALLOWED_ORIGIN or "*"
+    except Exception:
+        allowed = "*"
+    headers = Headers.new()
+    headers.set("Access-Control-Allow-Origin", allowed)
+    headers.set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    headers.set("Content-Type", "application/json")
+    return headers
+
+async def on_fetch(request, env):
+    method = request.method
+    headers = get_cors_headers(env)
+
+    if method == "OPTIONS":
+        return Response.new(None, status=204, headers=headers)
+
+    url_str = str(request.url)
+    path = url_str.split("?")[0].replace("http://", "").replace("https://", "")
+    parts = path.split("/")[1:]
+    pathname = "/" + "/".join(parts) if parts else "/"
+    pathname = pathname.rstrip("/")
+
+    try:
+        if pathname in ["", "/api", "/api/health"] and method == "GET":
+            await env.DB.prepare("SELECT 1;").first()
+            data = {"status": "online", "database": "Cloudflare D1", "runtime": "Python"}
+            return Response.new(json.dumps(data), status=200, headers=headers)
+
+        if pathname == "/api/posts" and method == "GET":
+            result = await env.DB.prepare("SELECT id, name, message, created_at FROM posts ORDER BY created_at DESC LIMIT 50").all()
+            data = {"success": True, "count": len(result.results), "data": result.results}
+            return Response.new(json.dumps(data), status=200, headers=headers)
+
+        if pathname == "/api/posts" and method == "POST":
+            req_json = await request.json()
+            name = str(req_json.name or "").strip()[:50]
+            msg = str(req_json.message or "").strip()[:500]
+            if not name or not msg:
+                return Response.new(json.dumps({"success": False, "error": "Name and message required"}), status=400, headers=headers)
+
+            post = await env.DB.prepare(
+                "INSERT INTO posts (name, message) VALUES (?, ?) RETURNING id, name, message, created_at"
+            ).bind(name, msg).first()
+            return Response.new(json.dumps({"success": True, "data": post}), status=201, headers=headers)
+
+        return Response.new(json.dumps({"success": False, "error": f"Route not found: {pathname}"}), status=404, headers=headers)
+    except Exception as e:
+        return Response.new(json.dumps({"success": False, "error": str(e)}), status=500, headers=headers)
+`;
+}
+
+export function generateTailoredReadme({ projectName, db, frontend, backendLang = "typescript", preset, ci }) {
   const dbName = db === "d1" ? "Cloudflare D1 (Native SQLite)" : "Turso (libSQL)";
   const feName = {
     vanilla: "Vanilla HTML/CSS/JS (Zero build)",
@@ -266,12 +458,18 @@ export function generateTailoredReadme({ projectName, db, frontend, preset, ci }
     svelte: "Svelte 5 + Vite",
   }[frontend];
 
+  const beName = {
+    typescript: "TypeScript (V8 Cloudflare Worker)",
+    rust: "Rust (worker-rs compiled to WebAssembly)",
+    python: "Python (Native Cloudflare Workers Python)",
+  }[backendLang] || "TypeScript";
+
   return `# ${projectName} ⚡
 
 A 100% free serverless edge web application generated with **create-d1-pages**.
 
 - **Frontend**: ${feName} (hosted on **GitHub Pages**)
-- **Edge Gateway**: **Cloudflare Workers** (REST API)
+- **Backend**: **${beName}** on **Cloudflare Workers**
 - **Database**: **${dbName}**
 
 ---
@@ -309,11 +507,22 @@ npx wrangler secret put TURSO_AUTH_TOKEN
 `
 }
 
-### 2. Deploy Edge Worker
+### 2. Deploy Edge Worker (${backendLang.toUpperCase()})
+${
+  backendLang === "rust"
+    ? `For Rust workers, ensure Rust and the wasm target are installed:
 \`\`\`bash
+rustup target add wasm32-unknown-unknown
+cargo install -q worker-build
 cd worker
 npm run deploy
-\`\`\`
+\`\`\``
+    : `\`\`\`bash
+cd worker
+npm run deploy
+\`\`\``
+}
+
 Wrangler will output your live URL (e.g. \`https://${projectName}-api.<user>.workers.dev\`).
 
 ### 3. Configure Frontend
