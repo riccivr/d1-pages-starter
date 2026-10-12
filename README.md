@@ -11,23 +11,58 @@ Starter template and interactive generator for web applications hosted on GitHub
 
 ## Interactive CLI
 
-Generate a project with your choice of frontend, database, and backend language:
+Scaffold a complete application with your choice of database, edge backend, and frontend.
 
 ```bash
+# Using bun:
+bun create d1-pages my-edge-app
+
 # Using npx / npm:
 npx create-d1-pages my-edge-app
 
-# Or directly from this repository:
+# From cloned repository:
+git clone https://github.com/riccivr/d1-pages-starter.git
+cd d1-pages-starter
 node bin/cli.js
 ```
 
-Prompts:
-* Project name: target folder name.
-* Database: Cloudflare D1 (native SQLite) or Turso (libSQL).
-* Backend language: TypeScript, Rust (WebAssembly via worker-rs), or Python.
-* Frontend: Vanilla HTML/JS, React with Vite, Astro, or Svelte 5.
-* Schema preset: guestbook, waitlist, or reaction counter.
-* CI/CD: optional GitHub Actions for automated deployment.
+### Terminal walkthrough
+
+```text
+? What is your project name? my-edge-app
+
+? Select your database engine:
+  ❯ Cloudflare D1 (Recommended) - Serverless SQLite, native worker binding, 5GB free
+    Turso (libSQL)              - Distributed SQLite over HTTP, 9GB storage free
+
+? Select your edge backend language:
+  ❯ TypeScript (Recommended)         - V8 native, fastest development
+    Rust (WebAssembly / worker-rs)   - Compiled Wasm, ultra-low memory, type safety
+    Python (Native Worker)           - Pyodide Wasm runtime, native D1 support
+
+? Select your frontend framework:
+  ❯ Vanilla HTML/CSS/JS - Zero build step, runs instantly in browser
+    React + Vite        - TypeScript, Tailwind CSS, Lucide icons, optimistic UI
+    Astro               - Static site generator with interactive client islands
+    Svelte 5            - Svelte 5 runes, Vite, TypeScript, ultra-lean bundle
+
+? Select an application preset:
+  ❯ Community Guestbook / Feed - Comments, author handles, timestamps
+    Waitlist & Newsletter      - Email signup form with validation
+    Upvote & Counters          - Atomic pageview and like increments
+
+? Include automated GitHub Actions CI/CD workflows for GitHub Pages & Workers? (Y/n)
+```
+
+### Supported options
+
+| Category | Options | Details |
+| :--- | :--- | :--- |
+| Database | Cloudflare D1, Turso | D1 uses direct `env.DB` bindings. Turso uses `@libsql/client` over HTTP. |
+| Backend | TypeScript, Rust, Python | TypeScript runs on V8. Rust compiles to Wasm via `worker-rs`. Python runs on Pyodide. |
+| Frontend | Vanilla JS, React, Astro, Svelte 5 | Vanilla requires no build step. React, Astro, and Svelte compile to static files for GitHub Pages. |
+| Preset | Guestbook, Waitlist, Counters | Generates SQL schema tables, indexes, and matching REST endpoints. |
+| CI/CD | GitHub Actions | Workflows for GitHub Pages and Cloudflare Workers deployment. |
 
 ---
 
