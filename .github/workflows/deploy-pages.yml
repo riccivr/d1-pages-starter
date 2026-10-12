@@ -1,0 +1,96 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      template:
+        description: "Frontend template to deploy"
+        required: true
+        default: "vanilla"
+        type: choice
+        options:
+          - vanilla
+          - react
+          - astro
+          - svelte
+          - root-showcase
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            templates/react/package.json
+            templates/astro/package.json
+            templates/svelte/package.json
+
+      - name: Build Chosen Template
+        id: build
+        env:
+          TEMPLATE_CHOICE: ${{ inputs.template || 'vanilla' }}
+        run: |
+          echo "Building template: $TEMPLATE_CHOICE"
+          
+          if [ "$TEMPLATE_CHOICE" = "vanilla" ]; then
+            mkdir -p ./deploy_output
+            cp -r ./templates/vanilla/* ./deploy_output/
+          elif [ "$TEMPLATE_CHOICE" = "root-showcase" ]; then
+            mkdir -p ./deploy_output
+            cp index.html ./deploy_output/
+            cp -r ./templates ./deploy_output/
+          elif [ "$TEMPLATE_CHOICE" = "react" ]; then
+            cd ./templates/react
+            npm ci
+            npm run build
+            cd ../..
+            mkdir -p ./deploy_output
+            cp -r ./templates/react/dist/* ./deploy_output/
+          elif [ "$TEMPLATE_CHOICE" = "astro" ]; then
+            cd ./templates/astro
+            npm ci
+            npm run build
+            cd ../..
+            mkdir -p ./deploy_output
+            cp -r ./templates/astro/dist/* ./deploy_output/
+          elif [ "$TEMPLATE_CHOICE" = "svelte" ]; then
+            cd ./templates/svelte
+            npm ci
+            npm run build
+            cd ../..
+            mkdir -p ./deploy_output
+            cp -r ./templates/svelte/dist/* ./deploy_output/
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./deploy_output
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

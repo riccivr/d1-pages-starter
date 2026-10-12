@@ -1,0 +1,193 @@
+---
+// Server-rendered static component with hydration script
+---
+
+<div class="guestbook-container">
+  <div class="card">
+    <div id="astro-error" class="error-msg" style="display: none;"></div>
+    <form id="astro-form">
+      <div class="field">
+        <label for="astro-name">Your Name</label>
+        <input type="text" id="astro-name" required maxlength="50" placeholder="e.g. Elena" />
+      </div>
+      <div class="field">
+        <label for="astro-message">Message</label>
+        <textarea id="astro-message" required maxlength="500" placeholder="Hello from Astro on GitHub Pages!"></textarea>
+      </div>
+      <button type="submit" id="astro-submit-btn">Send Message</button>
+    </form>
+  </div>
+
+  <section>
+    <h3 style="margin-bottom: 1rem;">Recent Messages</h3>
+    <div id="astro-posts" class="posts-list">
+      <p style="color: var(--muted); font-size: 0.9rem;">Loading messages from Turso...</p>
+    </div>
+  </section>
+</div>
+
+<script>
+  const API_URL = (import.meta.env.PUBLIC_API_URL as string) || 
+    (window.location.hostname === "localhost" ? "http://localhost:8787" : "https://your-worker-name.your-subdomain.workers.dev");
+
+  const form = document.getElementById("astro-form") as HTMLFormElement;
+  const nameInput = document.getElementById("astro-name") as HTMLInputElement;
+  const messageInput = document.getElementById("astro-message") as HTMLTextAreaElement;
+  const submitBtn = document.getElementById("astro-submit-btn") as HTMLButtonElement;
+  const postsBox = document.getElementById("astro-posts") as HTMLDivElement;
+  const errorBox = document.getElementById("astro-error") as HTMLDivElement;
+
+  async function loadPosts() {
+    try {
+      const res = await fetch(`${API_URL}/api/posts?limit=25`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load posts");
+
+      if (!data.data || data.data.length === 0) {
+        postsBox.innerHTML = '<p style="color: var(--muted); font-size: 0.9rem;">No messages yet.</p>';
+        return;
+      }
+
+      postsBox.innerHTML = data.data
+        .map(
+          (p: any) => `
+        <div class="post-item">
+          <div class="post-header">
+            <strong>${escapeHtml(p.name)}</strong>
+            <span class="post-time">${new Date(p.created_at).toLocaleDateString()}</span>
+          </div>
+          <p>${escapeHtml(p.message)}</p>
+        </div>
+      `
+        )
+        .join("");
+    } catch (err: any) {
+      postsBox.innerHTML = `<p style="color: #f87171; font-size: 0.9rem;">Error: ${err.message}</p>`;
+    }
+  }
+
+  function escapeHtml(text: string) {
+    const el = document.createElement("div");
+    el.textContent = text;
+    return el.innerHTML;
+  }
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorBox.style.display = "none";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Posting...";
+
+    try {
+      const res = await fetch(`${API_URL}/api/posts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: nameInput.value.trim(),
+          message: messageInput.value.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Submission failed");
+
+      messageInput.value = "";
+      await loadPosts();
+    } catch (err: any) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = "block";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Send Message";
+    }
+  });
+
+  loadPosts();
+</script>
+
+<style>
+  .guestbook-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  .field {
+    margin-bottom: 1rem;
+  }
+  label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--muted);
+  }
+  input, textarea {
+    width: 100%;
+    background: #060910;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  button {
+    background: var(--accent);
+    color: #060910;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    width: 100%;
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .error-msg {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.1);
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+  }
+  .posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  :global(.post-item) {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  :global(.post-header) {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 0.35rem;
+  }
+  :global(.post-header strong) {
+    color: var(--accent);
+  }
+  :global(.post-time) {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+</style>

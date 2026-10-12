@@ -1,0 +1,28 @@
+{
+  "name": "turso-pages-starter",
+  "version": "1.0.0",
+  "description": "Baseline starter kit for connecting GitHub Pages with Turso DB via Cloudflare Workers",
+  "private": true,
+  "scripts": {
+    "dev:worker": "npm --prefix worker run dev",
+    "deploy:worker": "npm --prefix worker run deploy",
+    "dev:react": "npm --prefix templates/react run dev",
+    "build:react": "npm --prefix templates/react run build",
+    "dev:astro": "npm --prefix templates/astro run dev",
+    "build:astro": "npm --prefix templates/astro run build",
+    "dev:svelte": "npm --prefix templates/svelte run dev",
+    "build:svelte": "npm --prefix templates/svelte run build"
+  },
+  "keywords": [
+    "turso",
+    "github-pages",
+    "cloudflare-workers",
+    "starter",
+    "sqlite",
+    "libsql",
+    "serverless",
+    "free-tier"
+  ],
+  "author": "",
+  "license": "MIT"
+}

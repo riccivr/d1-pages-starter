@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.astro/
+.output/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+wrangler.json
+!wrangler.jsonc
+!wrangler.jsonc.example
+
+# Wrangler / Cloudflare
+.wrangler/
+
+# IDE / System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

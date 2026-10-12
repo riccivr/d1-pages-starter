@@ -1,0 +1,19 @@
+{
+  "name": "turso-pages-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker edge proxy connecting GitHub Pages to Turso Database",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:setup": "node scripts/setup-db.js"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250204.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^3.107.0"
+  }
+}

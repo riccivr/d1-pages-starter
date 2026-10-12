@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "turso-pages-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-02-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    // Allowed CORS origin. In production, set to your GitHub Pages URL e.g. "https://<user>.github.io"
+    // Use "*" for development or public APIs.
+    "ALLOWED_ORIGIN": "*"
+  }
+  // Secrets to configure via `wrangler secret put <KEY>`:
+  // - TURSO_DATABASE_URL
+  // - TURSO_AUTH_TOKEN
+  // - ADMIN_API_KEY (optional, for protecting deletions or sensitive operations)
+}
