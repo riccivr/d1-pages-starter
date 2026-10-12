@@ -1,6 +1,6 @@
 # Vanilla JS Template
 
-A zero-build, dependency-free frontend template for GitHub Pages connecting to your Cloudflare Worker & Turso backend.
+A zero-build, dependency-free frontend template for GitHub Pages connecting to your Cloudflare Worker & Cloudflare D1 SQLite backend.
 
 ## Features
 - **Zero build step**: No Node/npm required to view or deploy.
@@ -12,7 +12,7 @@ A zero-build, dependency-free frontend template for GitHub Pages connecting to y
 Edit `config.js`:
 ```javascript
 const CONFIG = {
-  API_BASE_URL: "https://your-worker.your-subdomain.workers.dev",
+  API_BASE_URL: "https://d1-pages-api.<your-subdomain>.workers.dev",
 };
 ```
 

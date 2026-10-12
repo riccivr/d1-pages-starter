@@ -91,10 +91,10 @@
   <header>
     <div class="status-badge">
       <span class="status-indicator {status}"></span>
-      <span>{status === 'online' ? 'Turso Edge DB Connected' : status === 'checking' ? 'Checking DB...' : 'Offline'}</span>
+      <span>{status === 'online' ? 'Cloudflare D1 Connected' : status === 'checking' ? 'Checking DB...' : 'Offline'}</span>
     </div>
-    <h1>Turso Pages (Svelte)</h1>
-    <p class="subtitle">Reactive frontend on GitHub Pages backed by Cloudflare Worker + Turso.</p>
+    <h1>D1 Pages (Svelte)</h1>
+    <p class="subtitle">Reactive frontend on GitHub Pages backed by Cloudflare Worker + Cloudflare D1 SQLite.</p>
   </header>
 
   <section class="card form-card">
@@ -117,7 +117,7 @@
       </div>
 
       <button type="submit" disabled={submitting}>
-        {submitting ? "Saving to Turso..." : "Sign Guestbook"}
+        {submitting ? "Saving to D1..." : "Sign Guestbook"}
       </button>
     </form>
   </section>

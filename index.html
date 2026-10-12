@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Turso Pages Starter — 100% Free Full-Stack Web Apps</title>
+  <title>D1 Pages Starter — 100% Free Full-Stack Web Apps</title>
   <style>
     :root {
       --bg: #090d16;
       --card-bg: #121826;
       --border: #1e293b;
-      --cyan: #00e5a3;
+      --orange: #f38020;
       --blue: #38bdf8;
+      --cyan: #00e5a3;
       --text: #f1f5f9;
       --muted: #94a3b8;
     }
@@ -34,9 +35,9 @@
       display: inline-block;
       font-size: 0.8rem;
       font-weight: 700;
-      color: var(--cyan);
-      background: rgba(0, 229, 163, 0.1);
-      border: 1px solid rgba(0, 229, 163, 0.25);
+      color: var(--orange);
+      background: rgba(243, 128, 32, 0.1);
+      border: 1px solid rgba(243, 128, 32, 0.25);
       padding: 0.35rem 0.85rem;
       border-radius: 9999px;
       margin-bottom: 1rem;
@@ -46,7 +47,7 @@
       font-weight: 800;
       letter-spacing: -0.03em;
       margin-bottom: 0.75rem;
-      background: linear-gradient(135deg, #fff 30%, var(--blue) 100%);
+      background: linear-gradient(135deg, #fff 30%, var(--orange) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -77,12 +78,12 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 1.25rem 1.5rem;
-      min-width: 200px;
+      min-width: 220px;
       text-align: center;
     }
     .arch-node h3 { font-size: 1.1rem; margin-bottom: 0.25rem; }
     .arch-node p { font-size: 0.8rem; color: var(--muted); }
-    .arch-arrow { font-size: 1.5rem; color: var(--blue); }
+    .arch-arrow { font-size: 1.5rem; color: var(--orange); }
     .templates-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -102,7 +103,7 @@
     }
     .template-card:hover {
       transform: translateY(-3px);
-      border-color: var(--blue);
+      border-color: var(--orange);
     }
     .template-icon {
       font-size: 1.75rem;
@@ -121,7 +122,7 @@
     .tag {
       font-size: 0.75rem;
       font-weight: 600;
-      color: var(--cyan);
+      color: var(--orange);
     }
     .features-list {
       background: var(--card-bg);
@@ -155,12 +156,12 @@
   <div class="container">
     <header>
       <div class="badge">Open Source Template</div>
-      <h1>Turso Pages Starter</h1>
-      <p class="lead">Build, deploy, and scale free modern web apps with zero server maintenance costs.</p>
+      <h1>D1 Pages Starter</h1>
+      <p class="lead">Build, deploy, and scale free modern web apps with zero external database accounts and zero server costs.</p>
     </header>
 
     <div class="architecture-box">
-      <h2>Architecture: 100% Free Edge Tier</h2>
+      <h2>Architecture: 100% Free Edge Stack</h2>
       <div class="arch-flow">
         <div class="arch-node">
           <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🌐</div>
@@ -171,13 +172,13 @@
         <div class="arch-node">
           <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">⚡</div>
           <h3>Cloudflare Worker</h3>
-          <p>Edge Proxy API (Free 100k req/day)</p>
+          <p>Edge Gateway (Free 100k req/day)</p>
         </div>
         <div class="arch-arrow">➔</div>
         <div class="arch-node">
           <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🗄️</div>
-          <h3>Turso Database</h3>
-          <p>Edge SQLite (Free 9GB, 500 DBs)</p>
+          <h3>Cloudflare D1</h3>
+          <p>Native SQLite (Free 5GB, 5M reads/day)</p>
         </div>
       </div>
     </div>
@@ -211,12 +212,12 @@
     </div>
 
     <div class="features-list">
-      <h2>Why this stack?</h2>
+      <h2>Why Cloudflare D1 + GitHub Pages?</h2>
       <ul>
-        <li><strong>Zero Hosting Bills:</strong> Combines GitHub Pages, Cloudflare Workers, and Turso free tiers.</li>
-        <li><strong>Global Low Latency:</strong> Cloudflare edge nodes talk to Turso's globally distributed libSQL database.</li>
-        <li><strong>No Secret Leaks:</strong> Turso auth tokens and database credentials remain secured inside Cloudflare Workers secrets, never exposed to client-side code.</li>
-        <li><strong>Automated CI/CD:</strong> Included GitHub Actions workflows for continuous deployment of frontend and edge worker.</li>
+        <li><strong>No 3rd-Party Database Service:</strong> The database lives natively in Cloudflare right alongside your Worker. Zero token rotation or secret drift.</li>
+        <li><strong>Instant Local Emulation:</strong> Run and test your SQLite database offline with <code>wrangler dev</code> and <code>wrangler d1 execute --local</code> without even creating a remote database!</li>
+        <li><strong>Zero Cost:</strong> Leverages the generous free tiers of GitHub Pages and Cloudflare (5 million row reads/day, 100k writes/day, 5 GB storage).</li>
+        <li><strong>Rock-Solid Security:</strong> Browser clients never touch the database. All queries execute through prepared statements inside the Worker.</li>
       </ul>
     </div>
 

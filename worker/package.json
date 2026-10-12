@@ -1,19 +1,17 @@
 {
-  "name": "turso-pages-worker",
+  "name": "d1-pages-worker",
   "version": "1.0.0",
-  "description": "Cloudflare Worker edge proxy connecting GitHub Pages to Turso Database",
+  "description": "Cloudflare Worker edge proxy connecting GitHub Pages to Cloudflare D1 SQLite Database",
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:setup": "node scripts/setup-db.js"
-  },
-  "dependencies": {
-    "@libsql/client": "^0.14.0"
+    "db:init:local": "wrangler d1 execute pages-d1-db --local --file=./schema.sql",
+    "db:init:remote": "wrangler d1 execute pages-d1-db --remote --file=./schema.sql"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250204.0",
-    "typescript": "^5.7.0",
+    "typescript": "^5.7.3",
     "wrangler": "^3.107.0"
   }
 }

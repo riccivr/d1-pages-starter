@@ -1,11 +1,13 @@
 {
-  "name": "turso-pages-starter",
+  "name": "d1-pages-starter",
   "version": "1.0.0",
-  "description": "Baseline starter kit for connecting GitHub Pages with Turso DB via Cloudflare Workers",
+  "description": "Baseline starter kit for connecting GitHub Pages with Cloudflare D1 SQLite via Cloudflare Workers",
   "private": true,
   "scripts": {
     "dev:worker": "npm --prefix worker run dev",
     "deploy:worker": "npm --prefix worker run deploy",
+    "db:init:local": "npm --prefix worker run db:init:local",
+    "db:init:remote": "npm --prefix worker run db:init:remote",
     "dev:react": "npm --prefix templates/react run dev",
     "build:react": "npm --prefix templates/react run build",
     "dev:astro": "npm --prefix templates/astro run dev",
@@ -14,12 +16,11 @@
     "build:svelte": "npm --prefix templates/svelte run build"
   },
   "keywords": [
-    "turso",
+    "cloudflare-d1",
     "github-pages",
     "cloudflare-workers",
     "starter",
     "sqlite",
-    "libsql",
     "serverless",
     "free-tier"
   ],

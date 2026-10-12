@@ -1,10 +1,14 @@
-import { createClient, type Client } from "@libsql/client/web";
-
 export interface Env {
-  TURSO_DATABASE_URL: string;
-  TURSO_AUTH_TOKEN: string;
+  DB: D1Database;
   ALLOWED_ORIGIN?: string;
   ADMIN_API_KEY?: string;
+}
+
+interface Post {
+  id: number;
+  name: string;
+  message: string;
+  created_at: string;
 }
 
 interface PostInput {
@@ -16,8 +20,6 @@ function getCorsHeaders(env: Env, request: Request): HeadersInit {
   const origin = request.headers.get("Origin") || "";
   const allowed = env.ALLOWED_ORIGIN || "*";
 
-  // If configured as "*", allow any origin
-  // If specific origin configured, match or default to allowed
   const responseOrigin = allowed === "*" ? "*" : (origin.startsWith(allowed) ? origin : allowed);
 
   return {
@@ -38,24 +40,13 @@ function jsonResponse(data: unknown, status = 200, env: Env, request: Request): 
   });
 }
 
-function getTursoClient(env: Env): Client {
-  if (!env.TURSO_DATABASE_URL || !env.TURSO_AUTH_TOKEN) {
-    throw new Error("Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN in Worker environment");
-  }
-
-  return createClient({
-    url: env.TURSO_DATABASE_URL,
-    authToken: env.TURSO_AUTH_TOKEN,
-  });
-}
-
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, ""); // normalize trailing slash
     const method = request.method;
 
-    // Handle CORS preflight requests
+    // Handle CORS preflight
     if (method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -67,11 +58,13 @@ export default {
       // Health / Status endpoint
       if ((path === "" || path === "/api" || path === "/api/health") && method === "GET") {
         try {
-          const client = getTursoClient(env);
-          await client.execute("SELECT 1;");
+          if (!env.DB) {
+            throw new Error("D1 database binding 'DB' is missing in environment");
+          }
+          await env.DB.prepare("SELECT 1;").first();
           return jsonResponse({
             status: "online",
-            database: "connected",
+            database: "Cloudflare D1 (connected)",
             timestamp: new Date().toISOString(),
           }, 200, env, request);
         } catch (dbErr: any) {
@@ -85,23 +78,21 @@ export default {
 
       // GET /api/posts - Fetch latest posts
       if (path === "/api/posts" && method === "GET") {
-        const client = getTursoClient(env);
         const limitParam = parseInt(url.searchParams.get("limit") || "20", 10);
         const limit = Math.min(Math.max(1, isNaN(limitParam) ? 20 : limitParam), 100);
 
-        const result = await client.execute({
-          sql: "SELECT id, name, message, created_at FROM posts ORDER BY created_at DESC LIMIT ?",
-          args: [limit],
-        });
+        const { results } = await env.DB.prepare(
+          "SELECT id, name, message, created_at FROM posts ORDER BY created_at DESC LIMIT ?"
+        )
+          .bind(limit)
+          .all<Post>();
 
-        const posts = result.rows.map((row) => ({
-          id: row.id,
-          name: row.name,
-          message: row.message,
-          created_at: row.created_at,
-        }));
-
-        return jsonResponse({ success: true, count: posts.length, data: posts }, 200, env, request);
+        return jsonResponse(
+          { success: true, count: results.length, data: results },
+          200,
+          env,
+          request
+        );
       }
 
       // POST /api/posts - Create a new post
@@ -134,23 +125,16 @@ export default {
           );
         }
 
-        const client = getTursoClient(env);
-        const result = await client.execute({
-          sql: "INSERT INTO posts (name, message) VALUES (?, ?) RETURNING id, name, message, created_at;",
-          args: [name, message],
-        });
-
-        const newPost = result.rows[0];
+        const newPost = await env.DB.prepare(
+          "INSERT INTO posts (name, message) VALUES (?, ?) RETURNING id, name, message, created_at;"
+        )
+          .bind(name, message)
+          .first<Post>();
 
         return jsonResponse(
           {
             success: true,
-            data: {
-              id: newPost.id,
-              name: newPost.name,
-              message: newPost.message,
-              created_at: newPost.created_at,
-            },
+            data: newPost,
           },
           201,
           env,
@@ -161,7 +145,7 @@ export default {
       // DELETE /api/posts/:id - Delete a post
       const deleteMatch = path.match(/^\/api\/posts\/(\d+)$/);
       if (deleteMatch && method === "DELETE") {
-        // If ADMIN_API_KEY is configured, enforce authorization
+        // Enforce authorization if ADMIN_API_KEY is configured
         if (env.ADMIN_API_KEY) {
           const authHeader = request.headers.get("Authorization") || "";
           const expected = `Bearer ${env.ADMIN_API_KEY}`;
@@ -171,14 +155,14 @@ export default {
         }
 
         const postId = parseInt(deleteMatch[1], 10);
-        const client = getTursoClient(env);
-        const result = await client.execute({
-          sql: "DELETE FROM posts WHERE id = ?",
-          args: [postId],
-        });
+        const result = await env.DB.prepare("DELETE FROM posts WHERE id = ?")
+          .bind(postId)
+          .run();
+
+        const changes = result.meta?.changes ?? 0;
 
         return jsonResponse(
-          { success: true, deleted: result.rowsAffected > 0, id: postId },
+          { success: true, deleted: changes > 0, id: postId },
           200,
           env,
           request

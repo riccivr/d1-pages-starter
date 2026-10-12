@@ -113,7 +113,7 @@ export default function App() {
           <Database className="w-3.5 h-3.5" />
           <span>
             {dbStatus === "online"
-              ? "Turso + Worker Connected"
+              ? "Cloudflare D1 + Worker Connected"
               : dbStatus === "checking"
               ? "Checking edge API..."
               : "API / DB Offline"}
@@ -121,10 +121,10 @@ export default function App() {
         </div>
 
         <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-sky-400 bg-clip-text text-transparent mb-2">
-          Turso Pages Starter (React)
+          D1 Pages Starter (React)
         </h1>
         <p className="text-slate-400 text-sm sm:text-base">
-          Serverless edge stack: Vite + React on GitHub Pages querying Turso via Cloudflare Workers.
+          Serverless edge stack: Vite + React on GitHub Pages querying Cloudflare D1 SQLite via Cloudflare Workers.
         </p>
       </header>
 
@@ -166,7 +166,7 @@ export default function App() {
               rows={3}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Leave a message in the Turso guestbook..."
+              placeholder="Leave a message in the D1 guestbook..."
               className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition resize-none"
             />
           </div>
@@ -179,7 +179,7 @@ export default function App() {
             {submitting ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Posting to Turso...</span>
+                <span>Saving to D1...</span>
               </>
             ) : (
               <>

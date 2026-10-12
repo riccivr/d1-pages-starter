@@ -53,7 +53,7 @@ async function checkHealth() {
     const data = await res.json();
     if (res.ok && data.status === "online") {
       statusDot.className = "status-dot online";
-      statusText.textContent = "Worker & Turso Online";
+      statusText.textContent = "Worker & Cloudflare D1 Online";
     } else {
       statusDot.className = "status-dot offline";
       statusText.textContent = `Degraded (${data.error || "DB unreachable"})`;

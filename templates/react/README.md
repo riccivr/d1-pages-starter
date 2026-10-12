@@ -1,6 +1,6 @@
 # React + Vite Template
 
-A modern React 18/19 template using Vite, TypeScript, and Tailwind CSS configured for GitHub Pages and Cloudflare Workers + Turso.
+A modern React 18/19 template using Vite, TypeScript, and Tailwind CSS configured for GitHub Pages and Cloudflare Workers + Cloudflare D1.
 
 ## Quick Start
 1. Install dependencies:

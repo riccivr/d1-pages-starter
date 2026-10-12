@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Turso Pages Guestbook</title>
+  <title>D1 Pages Guestbook</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,8 +13,8 @@
         <span id="status-dot" class="status-dot"></span>
         <span id="status-text">Checking API...</span>
       </div>
-      <h1>Turso Pages Starter</h1>
-      <p class="subtitle">A full-stack, 100% free web app powered by GitHub Pages, Cloudflare Workers & Turso DB.</p>
+      <h1>D1 Pages Starter</h1>
+      <p class="subtitle">A full-stack, 100% free web app powered by GitHub Pages, Cloudflare Workers & Cloudflare D1.</p>
     </header>
 
     <main>
@@ -34,7 +34,7 @@
               <span>Message</span>
               <span id="message-counter" class="char-counter">0 / 500</span>
             </label>
-            <textarea id="message-input" placeholder="Leave a message in the Turso-backed guestbook..." maxlength="500" required></textarea>
+            <textarea id="message-input" placeholder="Leave a message in the D1-backed guestbook..." maxlength="500" required></textarea>
           </div>
 
           <button type="submit" id="submit-btn" class="btn">
@@ -49,7 +49,7 @@
         </div>
         <div id="posts-container" class="posts-list">
           <div class="empty-state">
-            <p>Loading entries from Turso...</p>
+            <p>Loading entries from Cloudflare D1...</p>
           </div>
         </div>
       </section>
@@ -59,7 +59,7 @@
       <p>
         Built with <a href="https://pages.github.com/" target="_blank" rel="noopener">GitHub Pages</a> + 
         <a href="https://workers.cloudflare.com/" target="_blank" rel="noopener">Cloudflare Workers</a> + 
-        <a href="https://turso.tech/" target="_blank" rel="noopener">Turso</a>.
+        <a href="https://developers.cloudflare.com/d1/" target="_blank" rel="noopener">Cloudflare D1</a>.
       </p>
     </footer>
   </div>

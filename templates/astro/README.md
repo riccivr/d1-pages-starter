@@ -1,6 +1,6 @@
 # Astro Template
 
-An Astro static site template configured for GitHub Pages with Cloudflare Workers + Turso.
+An Astro static site template configured for GitHub Pages with Cloudflare Workers + Cloudflare D1 SQLite.
 
 ## Quick Start
 1. Install dependencies:
@@ -9,7 +9,7 @@ An Astro static site template configured for GitHub Pages with Cloudflare Worker
    ```
 2. Set your Worker API URL in `.env`:
    ```bash
-   PUBLIC_API_URL=https://your-worker-name.your-subdomain.workers.dev
+   PUBLIC_API_URL=https://d1-pages-api.<your-subdomain>.workers.dev
    ```
 3. Run dev server:
    ```bash
