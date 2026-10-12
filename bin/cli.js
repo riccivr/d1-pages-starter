@@ -12,6 +12,7 @@ import {
   generateRustCargoToml,
   generateTailoredReadme,
 } from "./scaffold.js";
+import { generateFrontendOverride } from "./frontend-overrides.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -155,8 +156,7 @@ async function main() {
 
   // Preset / language notes
   if (presetChoice !== "guestbook") {
-    console.log(c.yellow("\nNote: Frontend templates are currently Guestbook-oriented."));
-    console.log(c.yellow("      You will need to adapt the frontend to call the " + presetChoice + " endpoints."));
+    console.log(c.dim("\nNote: Frontend will be generated for the " + presetChoice + " preset."));
   }
   if (dbChoice === "turso" && backendChoice !== "typescript") {
     console.log(c.yellow("\nNote: Turso is currently only fully supported with the TypeScript worker."));
@@ -172,6 +172,22 @@ async function main() {
   const frontendSourceDir = path.join(repoRoot, "templates", frontendChoice);
   const frontendDestDir = path.join(targetDir, "frontend");
   copyDir(frontendSourceDir, frontendDestDir);
+
+  // Override main app file for non-guestbook presets
+  const override = generateFrontendOverride(frontendChoice, presetChoice);
+  if (override) {
+    const targets = {
+      vanilla: "app.js",
+      react: "src/App.tsx",
+      svelte: "src/App.svelte",
+      astro: "src/components/Guestbook.astro",
+    };
+    const rel = targets[frontendChoice];
+    if (rel) {
+      fs.writeFileSync(path.join(frontendDestDir, rel), override, "utf-8");
+      console.log(c.dim(`  → Overwrote frontend/${rel} for ${presetChoice} preset`));
+    }
+  }
 
   // Setup worker/ directory
   const workerDestDir = path.join(targetDir, "worker");
