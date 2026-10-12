@@ -153,6 +153,16 @@ async function main() {
     defaultValue: true,
   });
 
+  // Preset / language notes
+  if (presetChoice !== "guestbook") {
+    console.log(c.yellow("\nNote: Frontend templates are currently Guestbook-oriented."));
+    console.log(c.yellow("      You will need to adapt the frontend to call the " + presetChoice + " endpoints."));
+  }
+  if (dbChoice === "turso" && backendChoice !== "typescript") {
+    console.log(c.yellow("\nNote: Turso is currently only fully supported with the TypeScript worker."));
+    console.log(c.yellow("      Rust and Python generators use Cloudflare D1."));
+  }
+
   console.log(`\n${c.cyan(symbols.sparkle)} ${c.bold("Scaffolding your edge web app...")}`);
 
   // Create target directory
