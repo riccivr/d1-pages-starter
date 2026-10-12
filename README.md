@@ -5,9 +5,28 @@
 [![Cloudflare Workers](https://img.shields.io/badge/Edge_Compute-Cloudflare_Workers-f38020?logo=cloudflare)](https://workers.cloudflare.com/)
 [![Cloudflare D1](https://img.shields.io/badge/Database-Cloudflare_D1_(SQLite)-f38020?logo=sqlite)](https://developers.cloudflare.com/d1/)
 
-A production-ready template and baseline for building **100% free full-stack web applications** by connecting **GitHub Pages** (static frontend) with **Cloudflare D1** (serverless native SQLite database) via **Cloudflare Workers** (edge gateway).
+A production-ready template and interactive CLI for building **100% free full-stack web applications** by connecting **GitHub Pages** (static frontend) with **Cloudflare D1** or **Turso** (serverless SQLite) via **Cloudflare Workers** (edge gateway).
 
-Includes ready-to-run frontend templates for **Vanilla JS**, **React + Vite**, **Astro**, and **Svelte 5**.
+---
+
+## ⚡ Interactive CLI (Create in Seconds)
+
+You can scaffold a customized project with interactive technology selection (similar to `bun create` / `npm create`):
+
+```bash
+# Using npx / npm:
+npx create-d1-pages my-edge-app
+
+# Or directly from this repository:
+node bin/cli.js
+```
+
+### Interactive Prompts:
+* 📁 **Project Name**: Choose target directory name
+* 🗄️ **Database Engine**: Cloudflare D1 (Native SQLite) or Turso (libSQL)
+* 🎨 **Frontend**: Vanilla JS (Zero-build), React + Vite, Astro, or Svelte 5
+* 🧩 **App Preset**: Guestbook / Feed, Waitlist / Newsletter, or Upvote / Reaction Counters
+* 🤖 **CI/CD**: Auto-configure GitHub Actions for GitHub Pages and Cloudflare Workers
 
 ---
 

@@ -1,9 +1,14 @@
 {
-  "name": "d1-pages-starter",
+  "name": "create-d1-pages",
   "version": "1.0.0",
-  "description": "Baseline starter kit for connecting GitHub Pages with Cloudflare D1 SQLite via Cloudflare Workers",
-  "private": true,
+  "description": "Interactive CLI to scaffold 100% free serverless edge web apps connecting GitHub Pages with Cloudflare D1 or Turso",
+  "type": "module",
+  "bin": {
+    "create-d1-pages": "./bin/cli.js"
+  },
+  "main": "bin/cli.js",
   "scripts": {
+    "create": "node bin/cli.js",
     "dev:worker": "npm --prefix worker run dev",
     "deploy:worker": "npm --prefix worker run deploy",
     "db:init:local": "npm --prefix worker run db:init:local",
@@ -16,7 +21,10 @@
     "build:svelte": "npm --prefix templates/svelte run build"
   },
   "keywords": [
+    "create-d1-pages",
+    "cli",
     "cloudflare-d1",
+    "turso",
     "github-pages",
     "cloudflare-workers",
     "starter",
