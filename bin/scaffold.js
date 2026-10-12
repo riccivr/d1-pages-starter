@@ -464,19 +464,19 @@ export function generateTailoredReadme({ projectName, db, frontend, backendLang 
     python: "Python (Native Cloudflare Workers Python)",
   }[backendLang] || "TypeScript";
 
-  return `# ${projectName} ⚡
+  return `# ${projectName}
 
-A 100% free serverless edge web application generated with **create-d1-pages**.
+Serverless edge web application generated with create-d1-pages.
 
-- **Frontend**: ${feName} (hosted on **GitHub Pages**)
-- **Backend**: **${beName}** on **Cloudflare Workers**
-- **Database**: **${dbName}**
+* Frontend: ${feName} (hosted on GitHub Pages)
+* Backend: ${beName} on Cloudflare Workers
+* Database: ${dbName}
 
 ---
 
-## 🚀 Quick Setup Guide
+## Setup
 
-### 1. Database Setup
+### 1. Database setup
 ${
   db === "d1"
     ? `Create your Cloudflare D1 database:
@@ -507,7 +507,7 @@ npx wrangler secret put TURSO_AUTH_TOKEN
 `
 }
 
-### 2. Deploy Edge Worker (${backendLang.toUpperCase()})
+### 2. Deploy edge worker (${backendLang.toUpperCase()})
 ${
   backendLang === "rust"
     ? `For Rust workers, ensure Rust and the wasm target are installed:
@@ -523,9 +523,9 @@ npm run deploy
 \`\`\``
 }
 
-Wrangler will output your live URL (e.g. \`https://${projectName}-api.<user>.workers.dev\`).
+Wrangler prints your live endpoint URL (e.g. \`https://${projectName}-api.<user>.workers.dev\`).
 
-### 3. Configure Frontend
+### 3. Configure frontend
 ${
   frontend === "vanilla"
     ? `Edit \`frontend/config.js\` and set your Worker URL:
@@ -540,18 +540,18 @@ ${frontend === "astro" ? "PUBLIC_API_URL" : "VITE_API_URL"}=https://${projectNam
 \`\`\``
 }
 
-### 4. Deploy Frontend to GitHub Pages
+### 4. Deploy frontend to GitHub Pages
 ${
   ci
     ? `1. Push this repository to GitHub.
 2. In GitHub Settings > Pages, set Source to **GitHub Actions**.
-3. The included workflow \`.github/workflows/deploy-pages.yml\` will build and deploy automatically!`
+3. The included workflow \`.github/workflows/deploy-pages.yml\` builds and deploys automatically.`
     : `Build the frontend (\`npm run build:frontend\`) and host the output on GitHub Pages.`
 }
 
 ---
 
-## 💻 Local Development
+## Local development
 
 \`\`\`bash
 # 1. Start worker
